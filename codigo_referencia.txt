@@ -1,0 +1,84 @@
+//Exemplo leitura de um arquivo txt
+
+// const fs = require("fs");
+// fs.readFile("./text.txt", (err, buffer) => {
+//     if(err){//Se tiver erro, ele imprime o erro
+//         console.log(err);
+//         return;
+//     }
+//     console.log(buffer.toString());
+
+// })
+
+// //Exemplo de escrita em um arquivo
+// const fs = require("fs");
+// const conteudo = "We trust the Lord."
+// fs.writeFile("./saida.txt", "Era uma vez", (err) => {
+//     if(err){
+//         console.log(err);
+//         return;
+//     }
+// })
+
+//Realizando Streams de leitura
+const fs = require("fs");
+const stream = fs.createReadStream("./countries.csv")
+const csvParser = require('csv-parser') // requisitando a bib do csv-parser
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;//requisitando
+
+//Realizando tratamento de dados
+let conteudo = [];
+stream.pipe(csvParser()).on("data", (dados) => {//Ouvidor de eventos
+
+    conteudo.push({/*Passando um modelo de objeto para o conteudo */
+        id: conteudo.length + 1, //Como estou colocando com o push pouco a pouco funciona
+        Country: dados['Country'].trim(),//To acessando a propriedade assim pq tem espaços no nome dela
+        Region: dados['Region'].trim(),
+        Population: Number(dados['Population']),
+        'Area (sq. mi.)': Number(dados['Area (sq. mi.)'].replace(',','.')),
+        'Pop. Density (per sq. mi.)': Number(dados['Pop. Density (per sq. mi.)'].replace(',','.')),
+        'Coastline (coast/area ratio)': Number(dados['Coastline (coast/area ratio)'].replace(',','.')),
+        'Net migration': Number(dados['Net migration'].replace(',','.')),
+        'Infant mortality (per 1000 births)': Number(dados['Infant mortality (per 1000 births)'].replace(',','.')),
+        'GDP ($ per capita)': Number(dados['GDP ($ per capita)'].replace(',','.')),
+        'Literacy (%)': Number(dados['Literacy (%)'].replace(',','.')),
+        'Phones (per 1000)': Number(dados['Phones (per 1000)'].replace(',','.')),
+        Birthrate: Number(dados['Birthrate'].replace(',','.')),
+        Deathrate: Number(dados['Deathrate'].replace(',','.')),
+        Agriculture: Number(dados['Agriculture'].replace(',','.')),
+        Industry: Number(dados['Industry'].replace(',','.')),
+        Service: Number(dados['Service'].replace(',','.')),
+
+    });
+});
+
+//Após transformação acima, é hora de escrever o csv
+// Preciso criar as colunas e escrever no csv dentro de um evento para funcionar
+stream.on('end', () => {
+//criando os nomes das colunas do futuro arquivo csv
+    const csvWriter = createCsvWriter({
+        path: 'countriesOut.csv',
+        header: [
+            {id: 'id', title: 'id'},
+            {id: 'Country', title: 'country'},
+            {id: 'Region', title: 'region'},
+            {id: 'Population', title: 'population'},
+            {id: 'Area (sq. mi.)', title: 'area'},
+            {id: 'Pop. Density (per sq. mi.)', title: 'densidade_populacional'},
+            {id: 'Coastline (coast/area ratio)', title: 'area_costeira_por_area'},
+            {id: 'Net migration', title: 'taxa_migratoria'},
+            {id: 'Infant mortality (per 1000 births)', title: 'mortalidade_infantil'},
+            {id: 'GDP ($ per capita)', title: 'pib'},
+            {id: 'Literacy (%)', title: 'alfabetizacao'},
+            {id: 'Phones (per 1000)', title: 'telefonia_movel'},
+            {id: 'Birthrate', title: 'taxa_natalidade'},
+            {id: 'Deathrate', title: 'taxa_mortalidade'},
+            {id: 'Agriculture', title: 'agricultura_porcentagem'},
+            {id: 'Industry', title: 'industria_porcentagem'},
+            {id: 'Service', title: 'servicos_porcentagem'},
+        ]
+    });
+
+//Criando o arquivo csv
+    csvWriter.writeRecords(conteudo)
+})
